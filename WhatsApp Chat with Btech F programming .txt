@@ -1,0 +1,71 @@
+16/10/2024, 10:20 am - Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them. Learn more.
+30/08/2024, 3:06 pm - ~ Vansh Bansal created group "Btech F programming "
+16/10/2024, 10:20 am - You joined from the community
+16/10/2024, 9:26 pm - Shivam joined from the community
+16/10/2024, 9:26 pm - +91 95182 23910 joined from the community
+17/10/2024, 11:15 am - +91 89290 34317: Ma'am ishko code ko print krwa le
+17/10/2024, 11:15 am - +91 89290 34317: Ya handwriting
+25/10/2024, 3:07 pm - +91 62309 56394: <Media omitted>
+25/10/2024, 3:07 pm - +91 62309 56394: <Media omitted>
+25/10/2024, 5:30 pm - +91 86858 76682 joined from the community
+27/10/2024, 4:09 pm - +91 70275 50397 joined from the community
+03/11/2024, 9:09 pm - +91 79881 90578 joined from the community
+03/11/2024, 9:09 pm - Yanky joined from the community
+06/11/2024, 4:23 pm - Amit joined from the community
+15/11/2024, 11:45 am - Amit joined from the community
+22/11/2024, 2:39 pm - +91 80530 70601: Room no. 260 me aana hai
+16/01/2025, 9:11 am - +91 98770 78138 was added
+16/01/2025, 9:11 am - +91 95486 59505 left
+16/01/2025, 9:44 am - Join other topic-based groups in this community and get admin announcements
+Anyone in the community can request to join this group.
+Your profile is visible to admins
+16/01/2025, 10:50 am - +91 81990 08973 joined from the community
+16/01/2025, 11:56 am - +91 91070 01600 joined from the community
+16/01/2025, 2:48 pm - +91 98770 78138: This message was deleted
+16/01/2025, 2:48 pm - +91 98770 78138: This message was deleted
+16/01/2025, 3:14 pm - Bibek Singh joined from the community
+22/01/2025, 6:34 pm - +91 93505 68736 joined from the community
+23/01/2025, 7:30 pm - +91 82713 23910 joined from the community
+07/02/2025, 3:35 pm - Vanshaj joined from the community
+03/04/2025, 10:20 am - +91 74041 19283: #include <iostream>
+using namespace std;
+
+class Box {
+public:
+    int *length;
+
+    // Constructor
+    Box(int l) {
+        length = new int(l);  // dynamically allocated memory
+    }
+
+    // Shallow copy constructor (does not copy the actual data, only the pointer)
+    Box(const Box &b) {
+        length = b.length;  // Copying the pointer (shallow copy)
+    }
+
+    // Destructor to free memory (causes double deletion in case of shallow copy)
+    ~Box() {
+        delete length;
+    }
+
+    void display() {
+        cout << "Length: " << *length << endl;
+    }
+};
+
+int main() {
+    Box box1(10); // Regular constructor
+    Box box2 = box1; // Shallow copy constructor is called
+
+    box1.display();
+    box2.display();
+
+    // Both box1 and box2 will try to delete the same memory
+    return 0;
+}
+10/04/2025, 9:26 am - +91 82952 22438: <Media omitted>
+15/04/2025, 9:53 am - +91 90502 11705 joined from the community
+28/04/2025, 9:13 pm - +91 74041 19283: This message was deleted
+03/07/2025, 9:22 am - ~ Ayush removed this group from a community
+05/01/2026, 7:29 pm - Dhiraj Mmdu: <Media omitted>
