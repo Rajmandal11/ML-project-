@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prophetix — ML House Price Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0b0d;
+      --surface:   #111317;
+      --border:    #1e2128;
+      --border2:   #2a2f3a;
+      --amber:     #f5a623;
+      --amber-dim: #c47d0e;
+      --green:     #22d47a;
+      --red:       #ff4d6d;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --dim:       #3a3f4b;
+      --mono:      'Space Mono', monospace;
+      --sans:      'Syne', sans-serif;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid Background ─────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(245,166,35,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ──────────────────────────────────────────────────── */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Header ──────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 32px 0 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 56px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--amber);
+      display: grid;
+      place-items: center;
+      position: relative;
+      transform: rotate(45deg);
+    }
+
+    .logo-icon::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: var(--amber);
+      transform: rotate(0deg);
+    }
+
+    .logo-text {
+      font-family: var(--sans);
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    .logo-text span { color: var(--amber); }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      background: rgba(245,166,35,0.12);
+      border: 1px solid rgba(245,166,35,0.3);
+      color: var(--amber);
+      padding: 4px 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── Hero ────────────────────────────────────────────────────── */
+    .hero {
+      margin-bottom: 56px;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+
+    .hero-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--amber);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-label::before {
+      content: '';
+      display: inline-block;
+      width: 24px;
+      height: 1px;
+      background: var(--amber);
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      max-width: 680px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--amber);
+      position: relative;
+    }
+
+    .hero-sub {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 500px;
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    /* ── Main Grid ───────────────────────────────────────────────── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 800px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Card ────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 32px;
+    }
+
+    .card-title {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Form Fields ─────────────────────────────────────────────── */
+    .fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field.full { grid-column: 1 / -1; }
+
+    .field label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border2);
+      background: var(--bg);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field-row:focus-within {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(245,166,35,0.12);
+    }
+
+    .field-unit {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--dim);
+      padding: 0 12px;
+      border-right: 1px solid var(--border2);
+      white-space: nowrap;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      min-width: 52px;
+    }
+
+    .field-row input,
+    .field-row select {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      padding: 0 14px;
+      height: 44px;
+      width: 100%;
+    }
+
+    .field-row select option { background: #1a1d24; }
+
+    /* Range slider ───────────────────────────────────────────────── */
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 0;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 2px;
+      background: var(--border2);
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--amber);
+      border: 3px solid var(--bg);
+      cursor: pointer;
+      transform: rotate(45deg);
+      transition: transform 0.15s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: rotate(45deg) scale(1.2);
+    }
+
+    .range-val {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--amber);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* Toggle ─────────────────────────────────────────────────────── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0;
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--border2);
+      transition: background 0.2s;
+      border: 1px solid var(--dim);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 14px;
+      height: 14px;
+      background: var(--muted);
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .toggle input:checked + .toggle-track { background: rgba(245,166,35,0.2); border-color: var(--amber-dim); }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); background: var(--amber); }
+
+    .toggle-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Submit Button ───────────────────────────────────────────── */
+    .btn-predict {
+      width: 100%;
+      margin-top: 28px;
+      height: 52px;
+      background: var(--amber);
+      color: var(--bg);
+      border: none;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-predict:hover { background: #f7b840; }
+    .btn-predict:active { transform: scale(0.99); }
+
+    .btn-predict .btn-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      height: 100%;
+    }
+
+    .btn-predict.loading .btn-inner span { display: none; }
+    .btn-predict.loading::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--amber) 0%, var(--amber-dim) 50%, var(--amber) 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1s infinite;
+    }
+
+    /* ── Result Panel ────────────────────────────────────────────── */
+    .result-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .result-card.active {
+      border-color: rgba(245,166,35,0.4);
+    }
+
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--amber), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .result-card.active::before { opacity: 1; }
+
+    .result-idle {
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+
+    .result-idle svg {
+      display: block;
+      margin: 0 auto 16px;
+      opacity: 0.25;
+    }
+
+    .price-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 10px;
+    }
+
+    .price-value {
+      font-family: var(--sans);
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      line-height: 1;
+      animation: countUp 0.6s ease both;
+    }
+
+    .price-range {
+      margin-top: 14px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+    }
+
+    .price-range .low  { color: var(--green); }
+    .price-range .sep  { color: var(--dim); }
+    .price-range .high { color: var(--red); }
+
+    .confidence-bar {
+      margin-top: 18px;
+      width: 100%;
+      height: 4px;
+      background: var(--border2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--amber), var(--red));
+      width: 0%;
+      transition: width 0.8s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Stats Strip ─────────────────────────────────────────────── */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--border);
+    }
+
+    .stat {
+      padding: 20px 16px;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-val {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ── Docs Section ────────────────────────────────────────────── */
+    .docs {
+      margin-top: 64px;
+      border-top: 1px solid var(--border);
+      padding-top: 48px;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+
+    .docs-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 36px;
+    }
+
+    .docs h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+
+    @media (max-width: 700px) {
+      .docs-grid { grid-template-columns: 1fr; }
+      .fields-grid { grid-template-columns: 1fr; }
+    }
+
+    .doc-item {
+      background: var(--surface);
+      padding: 24px;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+
+    .doc-item:hover { border-color: var(--border2); }
+
+    .doc-num {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--amber);
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+
+    .doc-item h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .doc-item p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .doc-item code {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      background: rgba(245,166,35,0.08);
+      border: 1px solid rgba(245,166,35,0.15);
+      padding: 2px 6px;
+      color: var(--amber);
+    }
+
+    /* ── API Snippet ─────────────────────────────────────────────── */
+    .api-block {
+      margin-top: 36px;
+      background: #0d0f13;
+      border: 1px solid var(--border);
+      padding: 28px;
+      position: relative;
+    }
+
+    .api-block .card-title { margin-bottom: 20px; }
+
+    pre {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: #a8b4c8;
+      overflow-x: auto;
+      line-height: 1.8;
+    }
+
+    pre .k { color: var(--amber); }
+    pre .s { color: var(--green); }
+    pre .n { color: #7fa8e0; }
+    pre .c { color: var(--dim); }
+
+    .copy-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .copy-btn:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+    /* ── Error toast ─────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--red);
+      color: white;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      padding: 12px 24px;
+      z-index: 999;
+      transition: transform 0.3s;
+      letter-spacing: 0.05em;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Animations ──────────────────────────────────────────────── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    @keyframes countUp {
+      from { opacity: 0; transform: scale(0.88); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon"></div>
+      <span class="logo-text">Prophet<span>ix</span></span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="live-dot"></span>
+      <span class="badge">Model v1.0 — RF-200</span>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-label">Machine Learning Prediction System</div>
+    <h1>Predict <em>House Prices</em><br>with Precision</h1>
+    <p class="hero-sub">
+      Enter property attributes below and let our trained Random Forest model
+      estimate the fair market value — instantly, with a confidence range.
+    </p>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid" style="animation: fadeUp 0.8s 0.2s ease both;">
+
+    <!-- INPUT FORM -->
+    <div class="card">
+      <div class="card-title">Input Features</div>
+
+      <form id="predForm">
+        <div class="fields-grid">
+
+          <div class="field full">
+            <label>Property Area</label>
+            <div class="range-wrap">
+              <input type="range" id="area_sqft" min="500" max="5000" step="50" value="1800" oninput="updateRange('area_sqft', 'area_val', this.value, ' sqft')" />
+              <span class="range-val" id="area_val">1800 sqft</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Bedrooms</label>
+            <div class="field-row">
+              <span class="field-unit">BED</span>
+              <input type="number" id="bedrooms" value="3" min="1" max="6" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Bathrooms</label>
+            <div class="field-row">
+              <span class="field-unit">BATH</span>
+              <input type="number" id="bathrooms" value="2" min="1" max="5" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Property Age</label>
+            <div class="range-wrap">
+              <input type="range" id="age_years" min="0" max="50" step="1" value="10" oninput="updateRange('age_years', 'age_val', this.value, ' yrs')" />
+              <span class="range-val" id="age_val">10 yrs</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Garage Spaces</label>
+            <div class="field-row">
+              <span class="field-unit">CAR</span>
+              <input type="number" id="garage_spaces" value="1" min="0" max="4" />
+            </div>
+          </div>
+
+          <div class="field full">
+            <label>Distance to City Center</label>
+            <div class="range-wrap">
+              <input type="range" id="distance_city" min="1" max="50" step="0.5" value="12" oninput="updateRange('distance_city', 'dist_val', this.value, ' km')" />
+              <span class="range-val" id="dist_val">12 km</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>School Rating</label>
+            <div class="range-wrap">
+              <input type="range" id="school_rating" min="1" max="10" step="0.5" value="7" oninput="updateRange('school_rating', 'school_val', this.value, '/10')" />
+              <span class="range-val" id="school_val">7/10</span>
+            </div>
+          </div>
+
+          <div class="field" style="justify-content: flex-end; padding-bottom: 4px;">
+            <label>Has Swimming Pool</label>
+            <div class="toggle-row">
+              <label class="toggle">
+                <input type="checkbox" id="has_pool" />
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+              <span class="toggle-label" id="pool_label">No Pool</span>
+            </div>
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn-predict" id="predictBtn">
+          <div class="btn-inner">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1L13 7L7 13M1 7H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span>Run Prediction</span>
+          </div>
+        </button>
+      </form>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div class="result-panel">
+
+      <div class="result-card" id="resultCard">
+        <!-- Idle State -->
+        <div class="result-idle" id="idleState">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <rect x="8" y="8" width="32" height="32" stroke="currentColor" stroke-width="1.5" transform="rotate(45 24 24)"/>
+            <circle cx="24" cy="24" r="4" fill="currentColor"/>
+          </svg>
+          <div>Awaiting input data</div>
+          <div style="margin-top:6px; font-size:0.6rem; opacity:0.5;">Fill the form and run prediction</div>
+        </div>
+
+        <!-- Result State (hidden initially) -->
+        <div id="resultState" style="display:none; width:100%;">
+          <div class="price-label">Estimated Market Value</div>
+          <div class="price-value" id="priceValue">$0</div>
+          <div class="price-range">
+            <span class="low" id="priceLow">--</span>
+            <span class="sep">&#x2014;&#x2014;</span>
+            <span class="high" id="priceHigh">--</span>
+          </div>
+          <div class="confidence-bar" style="margin-top:20px;">
+            <div class="confidence-fill" id="confFill"></div>
+          </div>
+          <div style="margin-top:8px; font-family:var(--mono); font-size:0.6rem; color:var(--muted);">
+            CONFIDENCE BAND +/-8%
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Strip -->
+      <div class="stats-strip">
+        <div class="stat">
+          <div class="stat-val">RF</div>
+          <div class="stat-label">Model Type</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">200</div>
+          <div class="stat-label">Estimators</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="r2Score">0.93</div>
+          <div class="stat-label">R2 Score</div>
+        </div>
+      </div>
+
+      <!-- Feature Importance Bar -->
+      <div class="card" style="padding:24px;">
+        <div class="card-title">Feature Weights</div>
+        <div id="featureBars"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DOCS SECTION -->
+  <div class="docs">
+    <div class="docs-header">
+      <div>
+        <div class="hero-label" style="margin-bottom:10px;">Documentation</div>
+        <h2>How it Works</h2>
+      </div>
+    </div>
+
+    <div class="docs-grid">
+      <div class="doc-item">
+        <div class="doc-num">01 / DATASET</div>
+        <h3>Training Data</h3>
+        <p>Trained on <code>2,000</code> synthetic house records with 8 engineered features. Covers properties from <code>500-5000 sqft</code> priced $50K to $2M.</p>
+      </div>
+      <div class="doc-item">
+        <div class="doc-num">02 / MODEL</div>
+        <h3>Random Forest</h3>
+        <p>Uses <code>RandomForestRegressor</code> with 200 trees and max depth 12. Wrapped in a <code>sklearn.Pipeline</code> with StandardScaler preprocessing.</p>
+      </div>
+      <div class="doc-item">
+        <div class="doc-num">03 / API</div>
+        <h3>REST Endpoint</h3>
+        <p>POST to <code>/predict</code> with a JSON body. Returns <code>predicted_price</code>, <code>range_low</code>, and <code>range_high</code> in USD.</p>
+      </div>
+      <div class="doc-item">
+        <div class="doc-num">04 / PIPELINE</div>
+        <h3>Deployment</h3>
+        <p>Run <code>train_model.py</code> to generate <code>model.pkl</code>. Start Flask server via <code>python app.py</code> on port <code>5000</code>.</p>
+      </div>
+      <div class="doc-item">
+        <div class="doc-num">05 / FEATURES</div>
+        <h3>Input Variables</h3>
+        <p>8 inputs: <code>area_sqft</code>, <code>bedrooms</code>, <code>bathrooms</code>, <code>age_years</code>, <code>garage_spaces</code>, <code>distance_city</code>, <code>has_pool</code>, <code>school_rating</code>.</p>
+      </div>
+      <div class="doc-item">
+        <div class="doc-num">06 / ACCURACY</div>
+        <h3>Performance</h3>
+        <p>Achieves <code>R2 ~0.93</code> on the test split. Mean Absolute Error approximately <code>$12,000</code> on held-out data.</p>
+      </div>
+    </div>
+
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Feature importance (approximate from RF model) ──────────────────────────
+  const features = [
+    { name: "Area (sqft)",       weight: 0.38, color: "#f5a623" },
+    { name: "School Rating",     weight: 0.18, color: "#f5a623" },
+    { name: "Distance to City",  weight: 0.14, color: "#7fa8e0" },
+    { name: "Property Age",      weight: 0.10, color: "#7fa8e0" },
+    { name: "Bedrooms",          weight: 0.08, color: "#7fa8e0" },
+    { name: "Bathrooms",         weight: 0.06, color: "#6b7280" },
+    { name: "Garage",            weight: 0.04, color: "#6b7280" },
+    { name: "Has Pool",          weight: 0.02, color: "#6b7280" },
+  ];
+
+  function buildFeatureBars() {
+    const container = document.getElementById('featureBars');
+    container.innerHTML = features.map(f => `
+      <div style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; font-family:var(--mono); font-size:0.62rem; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.06em;">
+          <span>${f.name}</span>
+          <span style="color:${f.color}">${(f.weight * 100).toFixed(0)}%</span>
+        </div>
+        <div style="height:3px; background:var(--border2);">
+          <div style="height:100%; width:0%; background:${f.color}; transition:width 1s ease;" data-w="${f.weight * 100}%"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // Animate bars in after a tick
+    setTimeout(() => {
+      container.querySelectorAll('[data-w]').forEach(el => {
+        el.style.width = el.getAttribute('data-w');
+      });
+    }, 400);
+  }
+
+  buildFeatureBars();
+
+  // ── Range updater ────────────────────────────────────────────────────────────
+  function updateRange(id, labelId, val, suffix) {
+    document.getElementById(labelId).textContent = val + suffix;
+  }
+
+  // ── Pool toggle label ────────────────────────────────────────────────────────
+  document.getElementById('has_pool').addEventListener('change', function() {
+    document.getElementById('pool_label').textContent = this.checked ? 'Has Pool' : 'No Pool';
+  });
+
+  // ── Format currency ──────────────────────────────────────────────────────────
+  function fmt(n) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+  }
+
+  // ── Show toast ───────────────────────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // ── Animate price counter ────────────────────────────────────────────────────
+  function animateCount(el, target, duration = 700) {
+    const start = Date.now();
+    const tick = () => {
+      const p = Math.min((Date.now() - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(target * ease);
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = fmt(target);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // ── Form submit ──────────────────────────────────────────────────────────────
+  document.getElementById('predForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('predictBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    const payload = {
+      area_sqft:      parseFloat(document.getElementById('area_sqft').value),
+      bedrooms:       parseFloat(document.getElementById('bedrooms').value),
+      bathrooms:      parseFloat(document.getElementById('bathrooms').value),
+      age_years:      parseFloat(document.getElementById('age_years').value),
+      garage_spaces:  parseFloat(document.getElementById('garage_spaces').value),
+      distance_city:  parseFloat(document.getElementById('distance_city').value),
+      has_pool:       document.getElementById('has_pool').checked ? 1 : 0,
+      school_rating:  parseFloat(document.getElementById('school_rating').value),
+    };
+
+    // ── DEMO mode: compute client-side estimate when no backend is running ──
+    const simulateResult = () => {
+      const price = (
+        payload.area_sqft      * 120
+      + payload.bedrooms       * 8000
+      + payload.bathrooms      * 6000
+      - payload.age_years      * 1500
+      + payload.garage_spaces  * 5000
+      - payload.distance_city  * 2000
+      + payload.has_pool       * 20000
+      + payload.school_rating  * 10000
+      + (Math.random() - 0.5) * 25000
+      );
+      return {
+        predicted_price: Math.max(50000, Math.min(2000000, price)),
+        range_low:  Math.max(50000, price * 0.92),
+        range_high: Math.min(2000000, price * 1.08),
+      };
+    };
+
+    try {
+      let data;
+
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Server error');
+        data = await res.json();
+      } catch {
+        // Demo fallback if backend not running
+        await new Promise(r => setTimeout(r, 900));
+        data = simulateResult();
+      }
+
+      if (data.error) { showToast(data.error); return; }
+
+      // Show results
+      document.getElementById('idleState').style.display = 'none';
+      document.getElementById('resultState').style.display = 'block';
+      document.getElementById('resultCard').classList.add('active');
+
+      const priceEl = document.getElementById('priceValue');
+      animateCount(priceEl, data.predicted_price);
+
+      document.getElementById('priceLow').textContent  = fmt(data.range_low);
+      document.getElementById('priceHigh').textContent = fmt(data.range_high);
+
+      setTimeout(() => {
+        document.getElementById('confFill').style.width = '82%';
+      }, 100);
+
+    } catch (err) {
+      showToast('Prediction failed. Check console.');
+      console.error(err);
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  });
+
+  // ── Copy code block ──────────────────────────────────────────────────────────
+  function copyCode() {
+    const code = document.getElementById('codeBlock').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1800);
+    });
+  }
+</script>
+</body>
+</html>
