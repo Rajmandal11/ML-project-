@@ -1,0 +1,25 @@
+# Core Web Framework
+Flask==2.3.3
+
+# Machine Learning & Data Science
+scikit-learn==1.3.0
+numpy==1.24.3
+pandas==2.0.3
+
+# Model Persistence
+joblib==1.3.2
+
+# Additional Flask Dependencies (auto-installed with Flask)
+Werkzeug==2.3.7
+Jinja2==3.1.2
+MarkupSafe==2.1.3
+itsdangerous==2.1.2
+click==8.1.7
+
+# Optional: For production deployment
+gunicorn==21.2.0
+
+# Optional: For development
+python-dotenv==1.0.0
+
+
